@@ -1,0 +1,6 @@
+@SafeEvent_HostAddress = http://localhost:5139
+
+GET {{SafeEvent_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
