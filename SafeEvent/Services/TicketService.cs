@@ -16,16 +16,22 @@ namespace SafeEvent.Services
             _context = context;
         }
 
-        public Task<Ticket> RegistrarTicketAsync(int eventoId, int clienteId)
+        public async Task<Ticket> RegistrarTicketAsync(int eventoId, int clienteId)
         {
-            var eventoExiste = _context.Eventos.Any(e => e.EventoId == eventoId);
-            if (!eventoExiste)
-                throw new RegisterException(ErrorMessages.EventoInexistenteRegistro); // <-- Usando constante
+          
+            var evento = await _context.Eventos.FindAsync(eventoId);
+            if (evento == null)
+                throw new RegisterException(ErrorMessages.EventoInexistenteRegistro);
 
+           
             var clienteExiste = _context.Usuarios.Any(u => u.UsuarioId == clienteId && u.Rol == RolUsuarioEnum.Cliente);
             if (!clienteExiste)
-                throw new RegisterException(ErrorMessages.ClienteInexistenteRegistro); // <-- Usando constante
+                throw new RegisterException(ErrorMessages.ClienteInexistenteRegistro);
 
+            if (evento.AforoActual >= evento.CapacidadMaxima)
+                throw new RegisterException(ErrorMessages.EventoAforoLleno);
+
+           
             var nuevoTicket = new Ticket
             {
                 EventoId = eventoId,
@@ -35,14 +41,27 @@ namespace SafeEvent.Services
                 FechaEmision = DateTime.Now
             };
 
+           
+            evento.AforoActual++;
+
             _context.Tickets.Add(nuevoTicket);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            return Task.FromResult(nuevoTicket);
+            return nuevoTicket;
         }
-
         public Task<Ticket> ValidarAccesoAsync(Guid codigoGuid, int staffValidadorId)
         {
+
+            var usuarioValidador = _context.Usuarios.FirstOrDefault(u => u.UsuarioId == staffValidadorId);
+            if (usuarioValidador == null)
+            {
+                throw new TicketValidacionException("El usuario validador especificado no existe.");
+                
+            }
+            if (usuarioValidador.Rol != RolUsuarioEnum.Staff)
+            {
+                throw new TicketValidacionException(ErrorMessages.UsuarioNoAutorizadoValidar);
+            }
             var ticket = _context.Tickets
                 .Include(t => t.Evento)
                 .FirstOrDefault(t => t.CodigoGuid == codigoGuid);
@@ -58,7 +77,6 @@ namespace SafeEvent.Services
 
             if (ticket.Evento != null && ticket.Evento.AforoActual >= ticket.Evento.CapacidadMaxima)
                 throw new TicketValidacionException(ErrorMessages.EventoAforoLleno);
-
             ticket.Estado = EstadoTicketEnum.Ingresado;
             ticket.StaffValidadorId = staffValidadorId;
             ticket.FechaIngreso = DateTime.Now;

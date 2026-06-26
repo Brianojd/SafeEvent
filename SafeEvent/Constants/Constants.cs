@@ -8,12 +8,12 @@
         public const string EventoAforoLleno = "Acceso Denegado: El evento ha alcanzado su capacidad máxima.";
         public const string TicketNoEncontradoConsulta = "Ticket no encontrado.";
         public const string AnulacionTicketIngresado = "No se puede anular un ticket que ya fue utilizado.";
-
-        // --- Mensajes de Error: Registro / Emisión ---
+        public const string UsuarioNoAutorizadoValidar = "El usuario no está autorizado para validar accesos.";
+       
         public const string EventoInexistenteRegistro = "El evento especificado no existe.";
         public const string ClienteInexistenteRegistro = "El cliente especificado no existe o el ID es inválido.";
 
-        // --- Títulos de Problem Details ---
+       
         public const string TitleValidacion = "Error en la Validación del Ticket";
         public const string TitleRegistro = "Error en el Registro / Emisión";
         public const string TitleErrorInterno = "Error Interno del Servidor";
@@ -23,7 +23,7 @@
         public const string TypeRegistro = "ERR_REGISTRO_FALLIDO";
         public const string TypeErrorInterno = "ERR_INTERNO_SERVIDOR";
 
-        // --- Mensajes de Éxito ---
+        
         public const string AccesoPermitido = "Acceso Permitido";
         public const string AnulacionExitosa = "Ticket anulado correctamente.";
        

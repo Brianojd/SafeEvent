@@ -8,8 +8,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 
-
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
 
 builder.Services.AddProblemDetails();
@@ -55,8 +59,8 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
 
-        // Esto lee tus modelos y crea la BD con sus tablas al arrancar la app
-        context.Database.EnsureCreated();
+        
+        DbInitializer.Seed(context);
     }
     catch (Exception ex)
     {
