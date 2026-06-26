@@ -18,17 +18,26 @@ namespace SafeEvent.Data
         {
             base.OnModelCreating(modelBuilder);
 
+           
             modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.Cliente)
                 .WithMany()
                 .HasForeignKey(t => t.ClienteId)
-                .OnDelete(DeleteBehavior.Restrict); 
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.StaffValidador)
                 .WithMany()
                 .HasForeignKey(t => t.StaffValidadorId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Ticket>()
+                .Property(t => t.Estado)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Rol)
+                .HasConversion<string>();
         }
     }
 }

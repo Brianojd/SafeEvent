@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SafeEvent.Constants; // <--- Importamos las constantes
 using SafeEvent.Services;
 
 namespace SafeEvent.Controllers
@@ -9,90 +10,46 @@ namespace SafeEvent.Controllers
     {
         private readonly ITicketService _ticketService;
 
-     
         public TicketsController(ITicketService ticketService)
         {
             _ticketService = ticketService;
         }
 
-    
+       
         [HttpPost("registrar")]
-        public async Task<IActionResult> Registrar([FromName] int eventoId, [FromName] int clienteId)
+        public async Task<IActionResult> Registrar([FromQuery] int eventoId, [FromQuery] int clienteId)
         {
-            try
-            {
-                var ticket = await _ticketService.RegistrarTicketAsync(eventoId, clienteId);
-                return Ok(ticket);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { mensaje = "Error al emitir el ticket", detalle = ex.Message });
-            }
-        }
-
-     
-        [HttpPut("validar")]
-        public async Task<IActionResult> Validar([FromQuery] Guid codigoGuid, [FromQuery] int staffId)
-        {
-            try
-            {
-                var ticketValidado = await _ticketService.ValidarAccesoAsync(codigoGuid, staffId);
-                return Ok(new { mensaje = "Acceso Permitido", ticket = ticketValidado });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                // Error controlado: El ticket no existe (Flujo alternativo)
-                return NotFound(new { mensaje = "Acceso Denegado", detalle = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                // Error controlado: Ya usado, anulado o aforo lleno (Flujo alternativo)
-                return BadRequest(new { mensaje = "Acceso Denegado", detalle = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "Error interno en el servidor", detalle = ex.Message });
-            }
+            var ticket = await _ticketService.RegistrarTicketAsync(eventoId, clienteId);
+            return Ok(ticket);
         }
 
        
-        [HttpGet("consultar/{codigoGuid}")]
-        public async Task<IActionResult> Consultar(Guid codigoGuid)
+        [HttpPut("validar")]
+        public async Task<IActionResult> Validar([FromQuery] Guid codigoGuid, [FromQuery] int staffId)
         {
-            try
-            {
-                var resultado = await _ticketService.ConsultarEstadoYAforoAsync(codigoGuid);
-                return Ok(resultado);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { mensaje = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "Error al consultar", detalle = ex.Message });
-            }
+            var ticketValidado = await _ticketService.ValidarAccesoAsync(codigoGuid, staffId);
+
+           
+            return Ok(new { mensaje = ErrorMessages.AccesoPermitido, ticket = ticketValidado });
         }
 
         
+        [HttpGet("consultar/{codigoGuid}")]
+        public async Task<IActionResult> Consultar(Guid codigoGuid)
+        {
+            var resultado = await _ticketService.ConsultarEstadoYAforoAsync(codigoGuid);
+            return Ok(resultado);
+        }
+
+      
         [HttpPut("anular/{id}")]
         public async Task<IActionResult> Anular(int id)
         {
-            try
-            {
-                var anulado = await _ticketService.AnularAcreditaciónAsync(id);
-                if (!anulado) return NotFound(new { mensaje = "No se encontró el ticket para anular." });
+            var anulado = await _ticketService.AnularAcreditaciónAsync(id);
+            if (!anulado) return NotFound();
 
-                return Ok(new { mensaje = "Ticket anulado correctamente." });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { mensaje = "No se pudo anular", detalle = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "Error de servidor", detalle = ex.Message });
-            }
+            
+            return Ok(new { mensaje = ErrorMessages.AnulacionExitosa });
         }
     }
 }
